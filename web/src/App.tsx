@@ -12,6 +12,10 @@ import { ApiError, createApi, storedPasscode, type Api } from "@/lib/api"
 import { DEFAULT_SORT } from "@/lib/sort"
 import type { Dish, Idea, Sort } from "@/lib/types"
 
+// Old links end in #dishes or #ideas: open the tab they meant, then drop the tail from the address.
+const initialTab = location.hash === "#ideas" ? "ideas" : "dishes"
+if (location.hash) history.replaceState(null, "", location.pathname + location.search)
+
 export default function App() {
   const [passcode, setPasscode] = useState(storedPasscode.get)
   const api = useMemo(() => (passcode ? createApi(passcode) : null), [passcode])
@@ -27,7 +31,7 @@ export default function App() {
 
 function Home({ api, onLocked }: { api: Api; onLocked: () => void }) {
   const { dishes, ideas, error, refresh } = useMaison(api, onLocked)
-  const [tab, setTab] = useState("dishes")
+  const [tab, setTab] = useState(initialTab)
   const [sort, setSort] = useState<Sort>(DEFAULT_SORT)
   const [dialog, setDialog] = useState<{ open: boolean; dish: Dish | null; fromIdea: Idea | null }>({ open: false, dish: null, fromIdea: null })
 
