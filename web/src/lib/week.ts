@@ -51,6 +51,15 @@ export function weekLabel(monday: string): string {
   return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`
 }
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+/** "Oct 26", with the year only when it isn't this year: "Dec 29, 2025" */
+export function shortWeekLabel(monday: string, today: Date = new Date()): string {
+  const d = fromIsoDay(monday)
+  const label = `${MONTHS[d.getMonth()]} ${d.getDate()}`
+  return d.getFullYear() === today.getFullYear() ? label : `${label}, ${d.getFullYear()}`
+}
+
 /** ISO-8601 week number. */
 export function isoWeek(day: string): number {
   const d = fromIsoDay(day)

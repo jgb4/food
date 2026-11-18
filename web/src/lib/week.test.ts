@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { daysOfWeek, isoWeek, mondayOf, sundayOf, toIsoDay, weekLabel, weeksOfMonth } from "./week"
+import { daysOfWeek, isoWeek, mondayOf, sundayOf, toIsoDay, shortWeekLabel, weekLabel, weeksOfMonth } from "./week"
 
 describe("weeksOfMonth", () => {
   it("lists every Monday-start week touching the month", () => {
@@ -46,6 +46,11 @@ describe("mondayOf", () => {
 describe("labels", () => {
   it("shows the Monday as M/D/YYYY", () => {
     expect(weekLabel("2026-09-14")).toBe("9/14/2026")
+  })
+  it("gives short labels, with the year only for other years", () => {
+    const today = new Date(2026, 10, 18, 12)
+    expect(shortWeekLabel("2026-10-26", today)).toBe("Oct 26")
+    expect(shortWeekLabel("2025-12-29", today)).toBe("Dec 29, 2025")
   })
   it("gives ISO week numbers", () => {
     expect(isoWeek("2026-11-16")).toBe(47)

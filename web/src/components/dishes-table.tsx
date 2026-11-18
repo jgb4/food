@@ -7,7 +7,7 @@ import { usePhotoUrl } from "@/hooks/use-maison"
 import type { Api } from "@/lib/api"
 import { nextSort, sortDishes } from "@/lib/sort"
 import type { Dish, Sort, SortKey } from "@/lib/types"
-import { mondayOf, weekLabel } from "@/lib/week"
+import { mondayOf, shortWeekLabel } from "@/lib/week"
 import { cn } from "@/lib/utils"
 
 type Props = {
@@ -47,13 +47,13 @@ export function DishesTable({ api, dishes, sort, onSortChange, onEdit }: Props) 
               <TableCell className="py-2">
                 <Thumb api={api} id={d.photo} name={d.name} onOpen={() => setViewing(d)} />
               </TableCell>
-              <TableCell className="text-muted-foreground tabular-nums">{weekLabel(mondayOf(d.weekOf))}</TableCell>
+              <TableCell className="text-muted-foreground tabular-nums">{shortWeekLabel(mondayOf(d.weekOf))}</TableCell>
               <TableCell className="whitespace-normal">
                 <div className="font-medium">{d.name}</div>
                 {d.notes && <div className="text-xs font-normal text-muted-foreground md:hidden">{d.notes}</div>}
               </TableCell>
               <TableCell className="text-right font-medium tabular-nums">
-                {d.score}<span className="text-muted-foreground">/10</span>
+                {d.score}
               </TableCell>
               <TableCell className="hidden max-w-[32ch] whitespace-normal text-muted-foreground md:table-cell">
                 {d.notes}

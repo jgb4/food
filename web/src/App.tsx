@@ -78,10 +78,7 @@ function Home({ api, onLocked }: { api: Api; onLocked: () => void }) {
               <Button variant="outline" onClick={() => openDish(null)}>Add the first dish</Button>
             </div>
           ) : (
-            <>
-              <DishesTable api={api} dishes={dishes} sort={sort} onSortChange={setSort} onEdit={(d) => openDish(d)} />
-              <p className="mt-3 text-xs text-muted-foreground">Select a dish to edit or delete it.</p>
-            </>
+            <DishesTable api={api} dishes={dishes} sort={sort} onSortChange={setSort} onEdit={(d) => openDish(d)} />
           )}
         </TabsContent>
 
