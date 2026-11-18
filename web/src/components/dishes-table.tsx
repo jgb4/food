@@ -113,9 +113,12 @@ function Thumb({ api, id, name, onOpen }: { api: Api; id: string | null; name: s
   )
 }
 
+/** The enlarged photo uses the same 4:3 framing as the thumbnails; the full photo is only shown in the dish form. */
 function FullPhoto({ api, id }: { api: Api; id: string | null }) {
   const url = usePhotoUrl(api, id)
-  return url
-    ? <img src={url} alt="" className="max-h-[80svh] w-full rounded-md object-contain" />
-    : <div className="aspect-[4/3] w-full rounded-md bg-muted" />
+  return (
+    <div className="aspect-[4/3] w-full overflow-hidden rounded-md bg-muted">
+      {url && <img src={url} alt="" className="size-full object-cover" />}
+    </div>
+  )
 }

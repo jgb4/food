@@ -220,7 +220,8 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
                   onDrop={(e) => { e.preventDefault(); setDragging(false); if (!photoBusy) pickPhoto(e.dataTransfer.files?.[0]) }}
                 >
                   {previewUrl && !photoBusy ? (
-                    <img src={previewUrl} alt="" className="aspect-[4/3] w-full object-cover" />
+                    // the form is the one place the whole photo shows; elsewhere it's framed 4:3
+                    <img src={previewUrl} alt="" className="aspect-[4/3] w-full object-contain" />
                   ) : (
                     <span className="px-4 py-6 text-center">{photoBusy ?? (dragging ? "Drop to add" : "Drop a photo here, or click to choose")}</span>
                   )}
