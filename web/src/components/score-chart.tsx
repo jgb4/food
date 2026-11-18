@@ -9,7 +9,12 @@ const M = { top: 8, right: 12, bottom: 22, left: 24 }
 const Y_TICKS = [0, 2, 4, 6, 8, 10]
 const INSET = 14
 
-/** Score of every dish by the week it was cooked, from the first week to the latest. Empty weeks just have no dot. */
+/**
+ * Score of every dish by the week it was cooked, from the first week to the latest. Empty weeks just have no dot.
+ *
+ * Not on the page yet: it's parked until there are more dishes. To show it, render
+ * `<ScoreChart dishes={dishes} />` in App.tsx right after the "Select a dish…" hint on the Past dishes tab.
+ */
 export function ScoreChart({ dishes }: { dishes: Dish[] }) {
   const box = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
