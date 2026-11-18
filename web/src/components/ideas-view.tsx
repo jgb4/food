@@ -73,21 +73,24 @@ export function IdeasView({ api, ideas, onChanged, onError, onCooked }: Props) {
       {list.length === 0 ? (
         <p className="py-10 text-center text-sm text-muted-foreground">No ideas yet.</p>
       ) : (
-        <ul className="divide-y border-y">
-          {list.map((idea) => (
-            <li
-              key={idea.id}
-              tabIndex={0}
-              className="cursor-pointer px-2 py-3 transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none"
-              onClick={() => setEditing(idea)}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setEditing(idea) } }}
-              aria-label={`Edit ${idea.name}`}
-            >
-              <div className="font-medium">{idea.name}</div>
-              {idea.notes && <p className="mt-0.5 text-sm whitespace-pre-wrap text-muted-foreground">{idea.notes}</p>}
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="divide-y border-y">
+            {list.map((idea) => (
+              <li
+                key={idea.id}
+                tabIndex={0}
+                className="cursor-pointer px-2 py-3 transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none"
+                onClick={() => setEditing(idea)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setEditing(idea) } }}
+                aria-label={`Edit ${idea.name}`}
+              >
+                <div className="font-medium">{idea.name}</div>
+                {idea.notes && <p className="mt-0.5 text-sm whitespace-pre-wrap text-muted-foreground">{idea.notes}</p>}
+              </li>
+            ))}
+          </ul>
+          <p className="-mt-3 text-xs text-muted-foreground">Select an idea to edit it, delete it or mark it cooked.</p>
+        </>
       )}
 
       <EditIdeaDialog
