@@ -7,6 +7,7 @@ import { DishDialog } from "@/components/dish-dialog"
 import { DishesTable } from "@/components/dishes-table"
 import { IdeasView } from "@/components/ideas-view"
 import { PasscodeGate } from "@/components/passcode-gate"
+import { ScoreChart } from "@/components/score-chart"
 import { useMaison } from "@/hooks/use-maison"
 import { ApiError, createApi, storedPasscode, type Api } from "@/lib/api"
 import { DEFAULT_SORT } from "@/lib/sort"
@@ -79,6 +80,7 @@ function Home({ api, onLocked }: { api: Api; onLocked: () => void }) {
             </div>
           ) : (
             <>
+              <ScoreChart dishes={dishes} />
               <DishesTable api={api} dishes={dishes} sort={sort} onSortChange={setSort} onEdit={(d) => openDish(d)} />
               <p className="mt-3 text-xs text-muted-foreground">Select a dish to edit or delete it.</p>
             </>
