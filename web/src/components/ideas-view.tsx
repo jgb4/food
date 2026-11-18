@@ -157,8 +157,8 @@ function EditIdeaDialog({ api, idea, onClose, onChanged, onError }: {
             {error && <FieldError>{error}</FieldError>}
           </FieldGroup>
         </form>
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => { setLastId(null); onClose() }}>Cancel</Button>
+        <DialogFooter className="border-t-0 bg-transparent">
+          <Button type="button" variant="outline" className="bg-transparent" onClick={() => { setLastId(null); onClose() }}>Cancel</Button>
           <Button type="submit" form="idea-form" disabled={saving || !name.trim()}>{saving ? "Saving…" : "Save"}</Button>
         </DialogFooter>
       </DialogContent>

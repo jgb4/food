@@ -244,14 +244,14 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
               {error && <FieldError>{error}</FieldError>}
             </FieldGroup>
           </form>
-          <DialogFooter className="sm:justify-between">
+          <DialogFooter className="border-t-0 bg-transparent sm:justify-between">
             {dish ? (
               <Button type="button" variant="ghost" className="text-destructive hover:text-destructive sm:-ml-2.5" onClick={() => setConfirmDelete(true)}>
                 Delete
               </Button>
             ) : <span />}
             <div className="flex flex-col-reverse gap-2 sm:flex-row">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button type="button" variant="outline" className="bg-transparent" onClick={() => onOpenChange(false)}>Cancel</Button>
               <Button type="submit" form="dish-form" disabled={saving || !!photoBusy || cropping}>{saving ? "Saving…" : "Save"}</Button>
             </div>
           </DialogFooter>

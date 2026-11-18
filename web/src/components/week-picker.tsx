@@ -36,7 +36,7 @@ export function WeekPicker({ id, value, onChange, taken }: Props) {
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
-        <Button id={id} variant="outline" className="w-full justify-between font-normal">
+        <Button id={id} variant="outline" className="w-full justify-between bg-transparent font-normal hover:bg-transparent aria-expanded:bg-transparent">
           {value ? `Week of ${weekLabel(value)}` : <span className="text-muted-foreground">Pick a week</span>}
           <CalendarIcon className="text-muted-foreground" />
         </Button>
