@@ -68,6 +68,14 @@ export function ScoreChart({ dishes }: { dishes: Dish[] }) {
                 {shortWeekLabel(weekAt(w))}
               </text>
             ))}
+            {/* the faintest line joining the dots in week order (each week has at most one dish) */}
+            <polyline
+              points={[...dishes].sort((a, b) => a.weekOf.localeCompare(b.weekOf)).map((d) => `${x(weeksBetween(first, mondayOf(d.weekOf)))},${y(d.score)}`).join(" ")}
+              fill="none"
+              strokeWidth={1}
+              strokeLinejoin="round"
+              className="stroke-primary opacity-15"
+            />
             {dishes.map((d) => {
               const cx = x(weeksBetween(first, mondayOf(d.weekOf)))
               const cy = y(d.score)
