@@ -357,22 +357,21 @@ function confirmBox(title, text){
 }
 
 /* ---------- photo handling ---------- */
-/* HEIC (iPhone) photos: Safari opens them natively; other browsers get a converter, loaded only when needed */
+/* HEIC (iPhone) photos: Safari opens them natively; other browsers get a converter, loaded only when needed.
+   heic-to uses a current libheif, which decodes 10-bit/HDR iPhone photos correctly (older converters turn them green). */
 const isHeic = f => /image\/hei[cf]/i.test(f.type || '') || /\.hei[cf]$/i.test(f.name || '');
 let heicLib = null;
 const loadHeic = () => heicLib ||= new Promise((res, rej) => {
   const s = document.createElement('script');
-  s.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
-  s.onload = () => window.heic2any ? res(window.heic2any) : rej(new Error('heic2any missing'));
-  s.onerror = () => { heicLib = null; rej(new Error('heic2any failed to load')); };
+  s.src = 'https://cdn.jsdelivr.net/npm/heic-to@1.6.7/dist/iife/heic-to.js';
+  s.onload = () => window.HeicTo ? res(window.HeicTo) : rej(new Error('heic-to missing'));
+  s.onerror = () => { heicLib = null; rej(new Error('heic-to failed to load')); };
   document.head.append(s);
 });
 async function decodeImage(file){
   try { return await createImageBitmap(file); } catch(e) {}
   if (!isHeic(file)) return null;
-  let jpeg = await (await loadHeic())({ blob: file, toType: 'image/jpeg', quality: 0.9 });
-  if (Array.isArray(jpeg)) jpeg = jpeg[0];
-  return await createImageBitmap(jpeg);
+  return await (await loadHeic())({ blob: file, type: 'bitmap' });
 }
 async function shrink(file){
   try {
