@@ -357,9 +357,27 @@ function confirmBox(title, text){
 }
 
 /* ---------- photo handling ---------- */
+/* HEIC (iPhone) photos: Safari opens them natively; other browsers get a converter, loaded only when needed */
+const isHeic = f => /image\/hei[cf]/i.test(f.type || '') || /\.hei[cf]$/i.test(f.name || '');
+let heicLib = null;
+const loadHeic = () => heicLib ||= new Promise((res, rej) => {
+  const s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+  s.onload = () => window.heic2any ? res(window.heic2any) : rej(new Error('heic2any missing'));
+  s.onerror = () => { heicLib = null; rej(new Error('heic2any failed to load')); };
+  document.head.append(s);
+});
+async function decodeImage(file){
+  try { return await createImageBitmap(file); } catch(e) {}
+  if (!isHeic(file)) return null;
+  let jpeg = await (await loadHeic())({ blob: file, toType: 'image/jpeg', quality: 0.9 });
+  if (Array.isArray(jpeg)) jpeg = jpeg[0];
+  return await createImageBitmap(jpeg);
+}
 async function shrink(file){
   try {
-    const bmp = await createImageBitmap(file);
+    const bmp = await decodeImage(file);
+    if (!bmp) return file;
     const max = 1280, k = Math.min(1, max / Math.max(bmp.width, bmp.height));
     const c = document.createElement('canvas'); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
     c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
@@ -373,11 +391,14 @@ function setPreview(src){
 $('f-photo').addEventListener('change', async e => {
   const f = e.target.files[0]; if (!f) return;
   $('f-err').hidden = true;
+  setPreview(null); $('drop-label').textContent = isHeic(f) ? 'Converting iPhone photo…' : 'Preparing photo…';
+  $('f-save').disabled = true;
   const small = await shrink(f);
+  $('f-save').disabled = false; $('drop-label').textContent = 'Tap to add a photo';
   if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(small.type)) {
-    // the browser couldn't open it (usually an iPhone HEIC photo), so it can't be shrunk or stored
+    // the browser couldn't open it even after trying to convert it
     e.target.value = '';
-    $('f-err').textContent = "This browser can't open that photo format (often HEIC from an iPhone). Choose a JPEG or PNG, or take a screenshot of the photo and use that.";
+    $('f-err').textContent = "Couldn't read that photo. Check your connection and try again, or pick a different photo.";
     $('f-err').hidden = false;
     return;
   }
