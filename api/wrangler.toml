@@ -1,0 +1,12 @@
+name = "maison-emma-api"
+main = "src/index.js"
+compatibility_date = "2025-06-01"
+workers_dev = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "maison-emma"
+database_id = "86142cb6-35d0-4796-a0bb-6ca91b4df15a"
+
+# The house passcode is a secret, not stored here. Set or change it with:
+#   npx wrangler secret put PASSCODE
