@@ -84,11 +84,12 @@ function SortHead({ label, col, sort, onSortChange, align = "start" }: {
         variant="ghost"
         size="sm"
         // pull the button's padding into the cell so the label lines up with the column's values
-        className={cn("font-medium", align === "end" ? "-mr-2" : "-ml-2", !active && "text-muted-foreground")}
+        className={cn("font-medium", align === "end" ? "-mr-2" : "-ml-2")}
         onClick={() => onSortChange(nextSort(sort, col))}
       >
         {label}
-        <Icon className={cn(!active && "opacity-50")} />
+        {/* the label stays bold; only the arrow shows which column is sorted */}
+        <Icon className={cn(!active && "text-muted-foreground opacity-50")} />
       </Button>
     </TableHead>
   )
