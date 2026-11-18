@@ -164,6 +164,8 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
                     <Input
                       id="dish-score"
                       inputMode="decimal"
+                      // no browser suggestions of previously typed scores
+                      autoComplete="off"
                       className="w-16 text-right tabular-nums"
                       placeholder="–"
                       value={scoreText}
