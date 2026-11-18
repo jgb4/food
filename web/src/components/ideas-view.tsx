@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { NotesInput } from "@/components/notes-input"
 import type { Api } from "@/lib/api"
 import type { Idea } from "@/lib/types"
 
@@ -64,7 +64,7 @@ export function IdeasView({ api, ideas, onChanged, onError, onCooked }: Props) {
         <div className="flex flex-1 flex-col gap-2">
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="New idea, e.g. mushroom risotto" aria-label="Idea" maxLength={120} />
           {name && (
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes: recipe link, what to buy" aria-label="Notes" rows={2} />
+            <NotesInput value={notes} onChange={setNotes} placeholder="Notes, e.g. what to buy" aria-label="Notes" />
           )}
         </div>
         <Button type="submit" disabled={adding || !name.trim()}>Add idea</Button>
@@ -152,7 +152,7 @@ function EditIdeaDialog({ api, idea, onClose, onChanged, onError }: {
             </Field>
             <Field>
               <FieldLabel htmlFor="idea-notes">Notes</FieldLabel>
-              <Textarea id="idea-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
+              <NotesInput id="idea-notes" value={notes} onChange={setNotes} />
             </Field>
             {error && <FieldError>{error}</FieldError>}
           </FieldGroup>

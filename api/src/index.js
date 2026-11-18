@@ -15,7 +15,8 @@
 //   POST   /api/check             200 if the passcode is right
 
 const ALLOWED_ORIGINS = ["https://jgb4.github.io", "http://localhost:8643"];
-const MAX_PHOTO = 1_900_000; // D1 rows top out at 2 MB
+const MAX_PHOTO = 1_900_000;
+const NOTES_MAX = 40; // same limit as the site (web/src/lib/notes.ts) // D1 rows top out at 2 MB
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
 const cors = (req) => {
@@ -53,12 +54,12 @@ function cleanDish(d) {
   if (!(score >= 0 && score <= 10)) throw "Score must be between 0 and 10.";
   const photo = d.photo == null || d.photo === "" ? null : String(d.photo);
   if (photo && !ID.test(photo)) throw "Bad photo id.";
-  return { name, weekOf, score: Math.round(score * 2) / 2, notes: str(d.notes, 5000), photo };
+  return { name, weekOf, score: Math.round(score * 2) / 2, notes: str(d.notes, NOTES_MAX), photo };
 }
 function cleanIdea(d) {
   const name = str(d.name, 120);
   if (!name) throw "Idea name is required.";
-  return { name, notes: str(d.notes, 5000) };
+  return { name, notes: str(d.notes, NOTES_MAX) };
 }
 
 const weekTaken = async (db, weekOf, exceptId) =>

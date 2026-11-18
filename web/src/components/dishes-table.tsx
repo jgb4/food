@@ -24,7 +24,8 @@ export function DishesTable({ api, dishes, sort, onSortChange, onEdit }: Props) 
 
   return (
     <>
-      <Table>
+      {/* tighter cell spacing on phones leaves more room for dish names and notes */}
+      <Table className="[&_td]:px-1 [&_th]:px-1 md:[&_td]:px-2 md:[&_th]:px-2">
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             <TableHead className="w-0"><span className="sr-only">Photo</span></TableHead>
@@ -50,13 +51,13 @@ export function DishesTable({ api, dishes, sort, onSortChange, onEdit }: Props) 
               <TableCell className="text-muted-foreground tabular-nums">{weekLabel(mondayOf(d.weekOf))}</TableCell>
               <TableCell className="whitespace-normal">
                 <div className="font-medium">{d.name}</div>
-                {d.notes && <div className="line-clamp-2 text-xs text-muted-foreground md:hidden">{d.notes}</div>}
+                {d.notes && <div className="text-xs font-normal text-muted-foreground md:hidden">{d.notes}</div>}
               </TableCell>
               <TableCell className="text-right font-medium tabular-nums">
                 {d.score}<span className="text-muted-foreground">/10</span>
               </TableCell>
               <TableCell className="hidden max-w-[32ch] whitespace-normal text-muted-foreground md:table-cell">
-                <span className="line-clamp-2">{d.notes}</span>
+                {d.notes}
               </TableCell>
             </TableRow>
           ))}
@@ -84,7 +85,7 @@ function SortHead({ label, col, sort, onSortChange, align = "start" }: {
         variant="ghost"
         size="sm"
         // pull the button's padding into the cell so the label lines up with the column's values
-        className={cn("font-medium", align === "end" ? "-mr-2" : "-ml-2", !active && "text-muted-foreground")}
+        className={cn("font-medium", align === "end" ? "-mr-1 md:-mr-2" : "-ml-1 md:-ml-2", !active && "text-muted-foreground")}
         onClick={() => onSortChange(nextSort(sort, col))}
       >
         {label}

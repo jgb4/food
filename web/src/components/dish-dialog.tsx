@@ -9,12 +9,13 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
-import { Textarea } from "@/components/ui/textarea"
+import { NotesInput } from "@/components/notes-input"
 import { PhotoCropper } from "@/components/photo-cropper"
 import { WeekPicker } from "@/components/week-picker"
 import { primePhoto, usePhotoUrl } from "@/hooks/use-maison"
 import type { Api } from "@/lib/api"
 import { isHeic, preparePhoto } from "@/lib/photo"
+import { NOTES_MAX } from "@/lib/notes"
 import { parseScore } from "@/lib/score"
 import { cn } from "@/lib/utils"
 import type { Dish, Idea } from "@/lib/types"
@@ -67,7 +68,7 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
     setWeekOf(dish ? mondayOf(dish.weekOf) : "")
     setScoreText(dish ? String(dish.score) : "")
     setSliderPos(dish?.score ?? 5)
-    setNotes(dish?.notes ?? fromIdea?.notes ?? "")
+    setNotes((dish?.notes ?? fromIdea?.notes ?? "").slice(0, NOTES_MAX))
     setDragging(false)
     setPhoto({ kind: dish?.photo ? "keep" : "none" })
     setCropSource(null)
@@ -238,7 +239,7 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
               </Field>
               <Field>
                 <FieldLabel htmlFor="dish-notes">Notes</FieldLabel>
-                <Textarea id="dish-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="What worked, what to ask for next time" />
+                <NotesInput id="dish-notes" value={notes} onChange={setNotes} placeholder="What worked, what to ask for next time" />
               </Field>
               {error && <FieldError>{error}</FieldError>}
             </FieldGroup>
