@@ -10,6 +10,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
+import { PhotoCropper } from "@/components/photo-cropper"
 import { WeekPicker } from "@/components/week-picker"
 import { primePhoto, usePhotoUrl } from "@/hooks/use-maison"
 import type { Api } from "@/lib/api"
@@ -46,6 +47,9 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
   const [dragging, setDragging] = useState(false)
   const [photo, setPhoto] = useState<PhotoState>({ kind: "keep" })
   const [photoBusy, setPhotoBusy] = useState<string | null>(null)
+  // Cropping always starts from the full, uncropped photo, so re-cropping can widen the frame again.
+  const [cropSource, setCropSource] = useState<string | null>(null)
+  const [cropping, setCropping] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -66,6 +70,8 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
     setNotes(dish?.notes ?? fromIdea?.notes ?? "")
     setDragging(false)
     setPhoto({ kind: dish?.photo ? "keep" : "none" })
+    setCropSource(null)
+    setCropping(false)
     setError(null)
     setSaving(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -79,7 +85,10 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
     setPhotoBusy(isHeic(file) ? "Converting iPhone photo…" : "Preparing photo…")
     try {
       const blob = await preparePhoto(file)
-      setPhoto({ kind: "new", blob, url: URL.createObjectURL(blob) })
+      const url = URL.createObjectURL(blob)
+      setPhoto({ kind: "new", blob, url })
+      setCropSource(url)
+      setCropping(false)
     } catch {
       setError("Couldn't read that photo. Try a different one.")
     } finally {
@@ -144,7 +153,7 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="dish-name">Dish</FieldLabel>
-                <Input id="dish-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} />
+                <Input id="dish-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} placeholder="Coq au vin" />
               </Field>
               <Field>
                 <FieldLabel htmlFor="dish-week">Week</FieldLabel>
@@ -183,6 +192,17 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
               </Field>
               <Field>
                 <FieldLabel htmlFor="dish-photo">Photo</FieldLabel>
+                {cropping && (cropSource ?? previewUrl) ? (
+                  <PhotoCropper
+                    src={(cropSource ?? previewUrl)!}
+                    onCancel={() => setCropping(false)}
+                    onApply={(blob) => {
+                      if (!cropSource) setCropSource(previewUrl)
+                      setPhoto({ kind: "new", blob, url: URL.createObjectURL(blob) })
+                      setCropping(false)
+                    }}
+                  />
+                ) : (<>
                 {/* Drop a photo anywhere in this area, or click it to choose one */}
                 <div
                   role="button"
@@ -207,10 +227,12 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
                 </div>
                 {previewUrl && !photoBusy && (
                   <div className="-ml-2.5 flex gap-1">
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setCropping(true)}>Crop</Button>
                     <Button type="button" variant="ghost" size="sm" onClick={() => fileRef.current?.click()}>Change</Button>
-                    <Button type="button" variant="ghost" size="sm" onClick={() => setPhoto({ kind: "none" })}>Remove</Button>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => { setPhoto({ kind: "none" }); setCropSource(null) }}>Remove</Button>
                   </div>
                 )}
+                </>)}
                 <input id="dish-photo" ref={fileRef} type="file" accept="image/*,.heic,.heif" className="sr-only" tabIndex={-1} onChange={(e) => pickPhoto(e.target.files?.[0])} />
               </Field>
               <Field>
@@ -228,7 +250,7 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
             ) : <span />}
             <div className="flex flex-col-reverse gap-2 sm:flex-row">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button type="submit" form="dish-form" disabled={saving || !!photoBusy}>{saving ? "Saving…" : "Save"}</Button>
+              <Button type="submit" form="dish-form" disabled={saving || !!photoBusy || cropping}>{saving ? "Saving…" : "Save"}</Button>
             </div>
           </DialogFooter>
         </DialogContent>

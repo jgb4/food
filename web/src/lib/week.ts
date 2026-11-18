@@ -26,6 +26,25 @@ export function sundayOf(monday: string): Date {
   return d
 }
 
+/** Mondays of every week that touches the given month (month is 0-based), in order. */
+export function weeksOfMonth(year: number, month: number): string[] {
+  const last = new Date(year, month + 1, 0, 12)
+  const weeks: string[] = []
+  for (const d = fromIsoDay(mondayOf(new Date(year, month, 1, 12))); d <= last; d.setDate(d.getDate() + 7)) {
+    weeks.push(toIsoDay(d))
+  }
+  return weeks
+}
+
+/** The seven days (Mon–Sun) of the week starting on `monday`. */
+export function daysOfWeek(monday: string): Date[] {
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = fromIsoDay(monday)
+    d.setDate(d.getDate() + i)
+    return d
+  })
+}
+
 /** "9/14/2026" */
 export function weekLabel(monday: string): string {
   const d = fromIsoDay(monday)
