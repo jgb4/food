@@ -24,8 +24,7 @@ export function DishesTable({ api, dishes, sort, onSortChange, onEdit }: Props) 
 
   return (
     <>
-      {/* tighter cell spacing on phones leaves more room for dish names and notes */}
-      <Table className="[&_td]:px-1 [&_th]:px-1 md:[&_td]:px-2 md:[&_th]:px-2">
+      <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             <TableHead className="w-0"><span className="sr-only">Photo</span></TableHead>
@@ -85,7 +84,7 @@ function SortHead({ label, col, sort, onSortChange, align = "start" }: {
         variant="ghost"
         size="sm"
         // pull the button's padding into the cell so the label lines up with the column's values
-        className={cn("font-medium", align === "end" ? "-mr-1 md:-mr-2" : "-ml-1 md:-ml-2", !active && "text-muted-foreground")}
+        className={cn("font-medium", align === "end" ? "-mr-2" : "-ml-2", !active && "text-muted-foreground")}
         onClick={() => onSortChange(nextSort(sort, col))}
       >
         {label}
