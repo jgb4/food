@@ -14,6 +14,8 @@ import { WeekPicker } from "@/components/week-picker"
 import { primePhoto, usePhotoUrl } from "@/hooks/use-maison"
 import type { Api } from "@/lib/api"
 import { isHeic, preparePhoto } from "@/lib/photo"
+import { parseScore } from "@/lib/score"
+import { cn } from "@/lib/utils"
 import type { Dish, Idea } from "@/lib/types"
 import { mondayOf, weekLabel } from "@/lib/week"
 
@@ -37,7 +39,9 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
   const [name, setName] = useState("")
   const [weekOf, setWeekOf] = useState("")
   const [score, setScore] = useState(7)
+  const [scoreText, setScoreText] = useState("7")
   const [notes, setNotes] = useState("")
+  const [dragging, setDragging] = useState(false)
   const [photo, setPhoto] = useState<PhotoState>({ kind: "keep" })
   const [photoBusy, setPhotoBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -56,7 +60,9 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
     setName(dish?.name ?? fromIdea?.name ?? "")
     setWeekOf(dish ? mondayOf(dish.weekOf) : taken.includes(thisWeek) ? "" : thisWeek)
     setScore(dish?.score ?? 7)
+    setScoreText(String(dish?.score ?? 7))
     setNotes(dish?.notes ?? fromIdea?.notes ?? "")
+    setDragging(false)
     setPhoto({ kind: dish?.photo ? "keep" : "none" })
     setError(null)
     setSaving(false)
@@ -84,6 +90,7 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
     e.preventDefault()
     if (!name.trim()) return setError("Give the dish a name.")
     if (!weekOf) return setError("Pick the week it was cooked.")
+    if (parseScore(scoreText) === null) return setError("Score must be a number from 0 to 10.")
     if (takenBy.has(weekOf)) return setError(`The week of ${weekLabel(weekOf)} already has ${takenBy.get(weekOf)}.`)
     setSaving(true)
     setError(null)
@@ -142,28 +149,64 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
                 <WeekPicker id="dish-week" value={weekOf} onChange={setWeekOf} taken={taken} />
               </Field>
               <Field>
-                <div className="flex items-baseline justify-between">
-                  <FieldLabel htmlFor="dish-score">Score</FieldLabel>
-                  <span className="text-sm font-medium tabular-nums">
-                    {score}<span className="text-muted-foreground">/10</span>
-                  </span>
+                <FieldLabel htmlFor="dish-score">Score</FieldLabel>
+                <div className="flex items-center gap-3">
+                  <Slider
+                    aria-label="Score slider"
+                    className="flex-1"
+                    min={0} max={10} step={0.5}
+                    value={[score]}
+                    onValueChange={([v]) => { setScore(v); setScoreText(String(v)) }}
+                  />
+                  <div className="flex items-center gap-1.5">
+                    <Input
+                      id="dish-score"
+                      inputMode="decimal"
+                      className="w-16 text-right tabular-nums"
+                      value={scoreText}
+                      aria-invalid={parseScore(scoreText) === null || undefined}
+                      onChange={(e) => {
+                        setScoreText(e.target.value)
+                        const n = parseScore(e.target.value)
+                        if (n !== null) setScore(n)
+                      }}
+                      onBlur={() => { if (parseScore(scoreText) !== null) setScoreText(String(score)) }}
+                    />
+                    <span className="text-sm text-muted-foreground">/10</span>
+                  </div>
                 </div>
-                <Slider id="dish-score" min={0} max={10} step={0.5} value={[score]} onValueChange={([v]) => setScore(v)} />
               </Field>
               <Field>
                 <FieldLabel htmlFor="dish-photo">Photo</FieldLabel>
-                {previewUrl && <img src={previewUrl} alt="" className="aspect-[4/3] w-full rounded-md border object-cover" />}
-                <div className="flex items-center gap-2">
-                  <Button type="button" variant="outline" size="sm" disabled={!!photoBusy} onClick={() => fileRef.current?.click()}>
-                    {photoBusy ?? (previewUrl ? "Change photo" : "Add photo")}
-                  </Button>
-                  {previewUrl && !photoBusy && (
-                    <Button type="button" variant="ghost" size="sm" onClick={() => setPhoto({ kind: "none" })}>
-                      Remove
-                    </Button>
+                {/* Drop a photo anywhere in this area, or click it to choose one */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  aria-label={previewUrl ? "Change photo" : "Add photo"}
+                  className={cn(
+                    "relative flex min-h-24 cursor-pointer items-center justify-center overflow-hidden rounded-md border border-dashed text-sm text-muted-foreground transition-colors outline-none hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring",
+                    dragging && "border-primary bg-muted/50",
+                    previewUrl && "border-solid"
+                  )}
+                  onClick={() => !photoBusy && fileRef.current?.click()}
+                  onKeyDown={(e) => { if ((e.key === "Enter" || e.key === " ") && !photoBusy) { e.preventDefault(); fileRef.current?.click() } }}
+                  onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; setDragging(true) }}
+                  onDragLeave={() => setDragging(false)}
+                  onDrop={(e) => { e.preventDefault(); setDragging(false); if (!photoBusy) pickPhoto(e.dataTransfer.files?.[0]) }}
+                >
+                  {previewUrl && !photoBusy ? (
+                    <img src={previewUrl} alt="" className="aspect-[4/3] w-full object-cover" />
+                  ) : (
+                    <span className="px-4 py-6 text-center">{photoBusy ?? (dragging ? "Drop to add" : "Drop a photo here, or click to choose")}</span>
                   )}
                 </div>
-                <input id="dish-photo" ref={fileRef} type="file" accept="image/*,.heic,.heif" className="sr-only" onChange={(e) => pickPhoto(e.target.files?.[0])} />
+                {previewUrl && !photoBusy && (
+                  <div className="-ml-2.5 flex gap-1">
+                    <Button type="button" variant="ghost" size="sm" onClick={() => fileRef.current?.click()}>Change</Button>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setPhoto({ kind: "none" })}>Remove</Button>
+                  </div>
+                )}
+                <input id="dish-photo" ref={fileRef} type="file" accept="image/*,.heic,.heif" className="sr-only" tabIndex={-1} onChange={(e) => pickPhoto(e.target.files?.[0])} />
               </Field>
               <Field>
                 <FieldLabel htmlFor="dish-notes">Notes</FieldLabel>

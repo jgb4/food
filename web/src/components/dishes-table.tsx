@@ -27,7 +27,7 @@ export function DishesTable({ api, dishes, sort, onSortChange, onEdit }: Props) 
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead className="w-14"><span className="sr-only">Photo</span></TableHead>
+            <TableHead className="w-0"><span className="sr-only">Photo</span></TableHead>
             <SortHead label="Week" col="week" sort={sort} onSortChange={onSortChange} />
             <TableHead>Dish</TableHead>
             <SortHead label="Score" col="score" sort={sort} onSortChange={onSortChange} align="end" />
@@ -44,7 +44,7 @@ export function DishesTable({ api, dishes, sort, onSortChange, onEdit }: Props) 
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onEdit(d) } }}
               aria-label={`Edit ${d.name}`}
             >
-              <TableCell className="py-1.5">
+              <TableCell className="py-2">
                 <Thumb api={api} id={d.photo} name={d.name} onOpen={() => setViewing(d)} />
               </TableCell>
               <TableCell className="text-muted-foreground tabular-nums">{weekLabel(mondayOf(d.weekOf))}</TableCell>
@@ -94,13 +94,16 @@ function SortHead({ label, col, sort, onSortChange, align = "start" }: {
   )
 }
 
+/** 4:3 thumbnails: 64×48 on phones, 112×84 where there's room. */
+const THUMB = "h-12 w-16 md:h-21 md:w-28"
+
 function Thumb({ api, id, name, onOpen }: { api: Api; id: string | null; name: string; onOpen: () => void }) {
   const url = usePhotoUrl(api, id)
-  if (!id) return <div className="size-10 rounded-md bg-muted" />
+  if (!id) return <div className={cn(THUMB, "rounded-md bg-muted")} />
   return (
     <button
       type="button"
-      className="block size-10 overflow-hidden rounded-md bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      className={cn(THUMB, "block overflow-hidden rounded-md bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none")}
       onClick={(e) => { e.stopPropagation(); onOpen() }}
       onKeyDown={(e) => e.stopPropagation()}
       aria-label={`View photo of ${name}`}

@@ -71,9 +71,7 @@ export function IdeasView({ api, ideas, onChanged, onError, onCooked }: Props) {
       </form>
 
       {list.length === 0 ? (
-        <p className="py-10 text-center text-sm text-muted-foreground">
-          No ideas yet. Add meals you'd like Emma to make; when one gets cooked, move it to Past dishes with "Cooked it".
-        </p>
+        <p className="py-10 text-center text-sm text-muted-foreground">No ideas yet.</p>
       ) : (
         <ul className="divide-y border-y">
           {list.map((idea) => (
