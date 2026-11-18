@@ -73,24 +73,35 @@ export function IdeasView({ api, ideas, onChanged, onError, onCooked }: Props) {
       {list.length === 0 ? (
         <p className="py-10 text-center text-sm text-muted-foreground">No ideas yet.</p>
       ) : (
-        <ul className="divide-y border-y">
-          {list.map((idea) => (
-            <li key={idea.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-start sm:justify-between">
-              <div className="min-w-0">
+        <>
+          <ul className="divide-y border-y">
+            {list.map((idea) => (
+              <li
+                key={idea.id}
+                tabIndex={0}
+                className="cursor-pointer px-2 py-3 transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none"
+                onClick={() => setEditing(idea)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setEditing(idea) } }}
+                aria-label={`Edit ${idea.name}`}
+              >
                 <div className="font-medium">{idea.name}</div>
                 {idea.notes && <p className="mt-0.5 text-sm whitespace-pre-wrap text-muted-foreground">{idea.notes}</p>}
-              </div>
-              <div className="-ml-2.5 flex shrink-0 gap-1 sm:ml-0">
-                <Button variant="ghost" size="sm" onClick={() => onCooked(idea)}>Cooked it</Button>
-                <Button variant="ghost" size="sm" onClick={() => setEditing(idea)}>Edit</Button>
-                <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => setDeleting(idea)}>Delete</Button>
-              </div>
-            </li>
-          ))}
-        </ul>
+              </li>
+            ))}
+          </ul>
+          <p className="-mt-3 text-xs text-muted-foreground">Select an idea to edit it, delete it or mark it cooked.</p>
+        </>
       )}
 
-      <EditIdeaDialog api={api} idea={editing} onClose={() => setEditing(null)} onChanged={onChanged} onError={onError} />
+      <EditIdeaDialog
+        api={api}
+        idea={editing}
+        onClose={() => setEditing(null)}
+        onChanged={onChanged}
+        onError={onError}
+        onDelete={(idea) => { setEditing(null); setDeleting(idea) }}
+        onCooked={(idea) => { setEditing(null); onCooked(idea) }}
+      />
 
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>
@@ -108,8 +119,11 @@ export function IdeasView({ api, ideas, onChanged, onError, onCooked }: Props) {
   )
 }
 
-function EditIdeaDialog({ api, idea, onClose, onChanged, onError }: {
+function EditIdeaDialog({ api, idea, onClose, onChanged, onError, onDelete, onCooked }: {
   api: Api; idea: Idea | null; onClose: () => void; onChanged: () => void; onError: (e: unknown) => string
+  onDelete: (idea: Idea) => void
+  /** Opens the dish form prefilled from this idea, including any unsaved edits to its name and notes */
+  onCooked: (idea: Idea) => void
 }) {
   const [name, setName] = useState("")
   const [notes, setNotes] = useState("")
@@ -157,9 +171,23 @@ function EditIdeaDialog({ api, idea, onClose, onChanged, onError }: {
             {error && <FieldError>{error}</FieldError>}
           </FieldGroup>
         </form>
-        <DialogFooter className="border-t-0 bg-transparent">
-          <Button type="button" variant="outline" className="bg-transparent" onClick={() => { setLastId(null); onClose() }}>Cancel</Button>
-          <Button type="submit" form="idea-form" disabled={saving || !name.trim()}>{saving ? "Saving…" : "Save"}</Button>
+        <DialogFooter className="border-t-0 bg-transparent sm:justify-between">
+          <Button type="button" variant="ghost" className="text-destructive hover:text-destructive sm:-ml-2.5" onClick={() => { if (idea) { setLastId(null); onDelete(idea) } }}>
+            Delete
+          </Button>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row">
+            <Button type="button" variant="outline" className="bg-transparent" onClick={() => { setLastId(null); onClose() }}>Cancel</Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="bg-transparent"
+              disabled={!name.trim()}
+              onClick={() => { if (idea) { setLastId(null); onCooked({ ...idea, name: name.trim(), notes: notes.trim() }) } }}
+            >
+              Cooked it
+            </Button>
+            <Button type="submit" form="idea-form" disabled={saving || !name.trim()}>{saving ? "Saving…" : "Save"}</Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
