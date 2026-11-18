@@ -62,9 +62,9 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
   // Reset the form each time it opens.
   useEffect(() => {
     if (!open) return
-    const thisWeek = mondayOf(new Date())
     setName(dish?.name ?? fromIdea?.name ?? "")
-    setWeekOf(dish ? mondayOf(dish.weekOf) : taken.includes(thisWeek) ? "" : thisWeek)
+    // new dishes start with no week chosen; editing keeps the dish's week
+    setWeekOf(dish ? mondayOf(dish.weekOf) : "")
     setScoreText(dish ? String(dish.score) : "")
     setSliderPos(dish?.score ?? 5)
     setNotes(dish?.notes ?? fromIdea?.notes ?? "")
