@@ -3,11 +3,7 @@ import { createRoot } from "react-dom/client"
 import "./index.css"
 import App from "./App"
 
-// Follow the device's light/dark setting (shadcn themes key off the .dark class).
-const dark = window.matchMedia("(prefers-color-scheme: dark)")
-const applyTheme = () => document.documentElement.classList.toggle("dark", dark.matches)
-applyTheme()
-dark.addEventListener("change", applyTheme)
+// The site always uses its light pink theme, whatever the device's light/dark setting.
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

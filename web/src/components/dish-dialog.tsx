@@ -144,7 +144,7 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="dish-name">Dish</FieldLabel>
-                <Input id="dish-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} placeholder="Coq au vin" />
+                <Input id="dish-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} />
               </Field>
               <Field>
                 <FieldLabel htmlFor="dish-week">Week</FieldLabel>

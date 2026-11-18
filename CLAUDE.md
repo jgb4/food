@@ -7,6 +7,7 @@
 - Favor typography, spacing, alignment, and subtle borders over decoration.
 - Keep layouts compact.
 - Use neutral colors with one accent color.
+  - Exception, by the owner's choice: Maison Emma's page background is light pink (#F7E4E6), always, with no dark mode. Keep it; navy (#2F3A5E, the logo's ink) stays the one accent.
 - Avoid gradients, glows, oversized radii, decorative icons, and excessive shadows.
 - Cards are not the default container. Prefer sections, rows, whitespace, and dividers.
 - Deliberately under-design first implementations. Establish hierarchy and usability before adding visual personality.
