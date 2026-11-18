@@ -38,8 +38,10 @@ type PhotoState = { kind: "keep" } | { kind: "none" } | { kind: "new"; blob: Blo
 export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, onChanged, onError }: Props) {
   const [name, setName] = useState("")
   const [weekOf, setWeekOf] = useState("")
-  const [score, setScore] = useState(7)
-  const [scoreText, setScoreText] = useState("7")
+  // The score box is the source of truth; the slider mirrors it and rests at 5 until a score is set.
+  const [scoreText, setScoreText] = useState("")
+  const [sliderPos, setSliderPos] = useState(5)
+  const score = parseScore(scoreText)
   const [notes, setNotes] = useState("")
   const [dragging, setDragging] = useState(false)
   const [photo, setPhoto] = useState<PhotoState>({ kind: "keep" })
@@ -59,8 +61,8 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
     const thisWeek = mondayOf(new Date())
     setName(dish?.name ?? fromIdea?.name ?? "")
     setWeekOf(dish ? mondayOf(dish.weekOf) : taken.includes(thisWeek) ? "" : thisWeek)
-    setScore(dish?.score ?? 7)
-    setScoreText(String(dish?.score ?? 7))
+    setScoreText(dish ? String(dish.score) : "")
+    setSliderPos(dish?.score ?? 5)
     setNotes(dish?.notes ?? fromIdea?.notes ?? "")
     setDragging(false)
     setPhoto({ kind: dish?.photo ? "keep" : "none" })
@@ -90,7 +92,7 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
     e.preventDefault()
     if (!name.trim()) return setError("Give the dish a name.")
     if (!weekOf) return setError("Pick the week it was cooked.")
-    if (parseScore(scoreText) === null) return setError("Score must be a number from 0 to 10.")
+    if (score === null) return setError(scoreText.trim() ? "Score must be a number from 0 to 10." : "Set a score with the slider or type one in.")
     if (takenBy.has(weekOf)) return setError(`The week of ${weekLabel(weekOf)} already has ${takenBy.get(weekOf)}.`)
     setSaving(true)
     setError(null)
@@ -103,7 +105,7 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
       } else if (photo.kind === "none") {
         photoId = null
       }
-      const input = { name: name.trim(), weekOf, score, notes: notes.trim(), photo: photoId }
+      const input = { name: name.trim(), weekOf, score: score!, notes: notes.trim(), photo: photoId }
       if (dish) await api.updateDish(dish.id, input)
       else await api.addDish(input)
       if (dish?.photo && dish.photo !== photoId) await api.deletePhoto(dish.photo).catch(() => {})
@@ -153,24 +155,25 @@ export function DishDialog({ api, open, onOpenChange, dish, fromIdea, dishes, on
                 <div className="flex items-center gap-3">
                   <Slider
                     aria-label="Score slider"
-                    className="flex-1"
+                    className={cn("flex-1", score === null && "opacity-50")}
                     min={0} max={10} step={0.5}
-                    value={[score]}
-                    onValueChange={([v]) => { setScore(v); setScoreText(String(v)) }}
+                    value={[sliderPos]}
+                    onValueChange={([v]) => { setSliderPos(v); setScoreText(String(v)) }}
                   />
                   <div className="flex items-center gap-1.5">
                     <Input
                       id="dish-score"
                       inputMode="decimal"
                       className="w-16 text-right tabular-nums"
+                      placeholder="–"
                       value={scoreText}
-                      aria-invalid={parseScore(scoreText) === null || undefined}
+                      aria-invalid={(scoreText.trim() !== "" && score === null) || undefined}
                       onChange={(e) => {
                         setScoreText(e.target.value)
                         const n = parseScore(e.target.value)
-                        if (n !== null) setScore(n)
+                        if (n !== null) setSliderPos(n)
                       }}
-                      onBlur={() => { if (parseScore(scoreText) !== null) setScoreText(String(score)) }}
+                      onBlur={() => { if (score !== null) setScoreText(String(score)) }}
                     />
                     <span className="text-sm text-muted-foreground">/10</span>
                   </div>
