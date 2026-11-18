@@ -42,12 +42,10 @@ export function ScoreChart({ dishes }: { dishes: Dish[] }) {
   }
 
   return (
-    <section className="mb-6" aria-label="Score over time">
+    <section className="mt-10" aria-label="Score over time">
       <div className="mb-2 flex items-baseline justify-between gap-3">
         <h2 className="text-sm font-medium">Score over time</h2>
-        <p className="truncate text-xs text-muted-foreground tabular-nums" aria-live="polite">
-          {picked && <>{picked.name} · {shortWeekLabel(mondayOf(picked.weekOf))} · <span className="font-medium text-foreground">{picked.score}</span></>}
-        </p>
+        <p className="truncate text-xs text-muted-foreground" aria-live="polite">{picked?.name}</p>
       </div>
       <div ref={box} className="w-full">
         {width > 0 && (
@@ -78,9 +76,7 @@ export function ScoreChart({ dishes }: { dishes: Dish[] }) {
                 <g key={d.id} onMouseEnter={() => setPicked(d)} onClick={() => setPicked(on ? null : d)} className="cursor-default">
                   {/* a bigger invisible target so dots are easy to hit with a finger */}
                   <circle cx={cx} cy={cy} r={10} fill="transparent" />
-                  <circle cx={cx} cy={cy} r={on ? 5 : 4} className={cn("fill-primary transition-[r]", !on && picked && "opacity-40")} />
-                  <title>{`${d.name} · ${shortWeekLabel(mondayOf(d.weekOf))} · ${d.score}`}</title>
-                </g>
+                  <circle cx={cx} cy={cy} r={on ? 5 : 4} className={cn("fill-primary transition-[r]", !on && picked && "opacity-40")} />                </g>
               )
             })}
           </svg>

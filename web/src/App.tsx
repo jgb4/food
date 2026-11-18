@@ -80,9 +80,9 @@ function Home({ api, onLocked }: { api: Api; onLocked: () => void }) {
             </div>
           ) : (
             <>
-              <ScoreChart dishes={dishes} />
               <DishesTable api={api} dishes={dishes} sort={sort} onSortChange={setSort} onEdit={(d) => openDish(d)} />
               <p className="mt-3 text-xs text-muted-foreground">Select a dish to edit or delete it.</p>
+              <ScoreChart dishes={dishes} />
             </>
           )}
         </TabsContent>
