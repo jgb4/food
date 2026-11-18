@@ -16,6 +16,9 @@ create table if not exists ideas (
   notes      text not null default '',
   created_at integer not null
 );
+-- One dish per week (week_of is always that week's Monday).
+create unique index if not exists dishes_one_per_week on dishes (week_of);
+
 create table if not exists photos (
   id         text primary key,
   type       text not null,          -- image/jpeg etc.

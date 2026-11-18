@@ -79,6 +79,22 @@ td.sc{white-space:nowrap}
 td.nt{min-width:220px;max-width:46ch;white-space:pre-wrap;overflow-wrap:anywhere;opacity:.86}
 td.nt:empty::before{content:"–";color:var(--muted)}
 td.act{white-space:nowrap;text-align:right}
+.wkno{color:var(--muted);opacity:.75;margin-left:6px;font-size:12px}
+.wkpick{border:1px solid var(--line);border-radius:12px;padding:8px 10px 10px;background:var(--bg)}
+.wkpick-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.wkpick-head b{font-family:var(--display);font-size:16px}
+.wkpick-nav{border:0;background:none;color:var(--ink);font-size:22px;line-height:1;cursor:pointer;padding:4px 12px;border-radius:8px}
+.wkpick-nav:hover{background:var(--surface)}
+.wkpick-dows,.wkrow{display:grid;grid-template-columns:repeat(7,1fr);text-align:center}
+.wkpick-dows span{font-size:11px;color:var(--muted);letter-spacing:.06em;padding:4px 0}
+.wkrow{width:100%;border:0;background:none;color:var(--ink);font:inherit;padding:0;border-radius:8px;cursor:pointer}
+.wkrow span{padding:7px 0;font-variant-numeric:tabular-nums;font-size:14px}
+.wkrow span.out{color:var(--muted)}
+.wkrow:hover:not(:disabled){background:var(--surface)}
+.wkrow[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.wkrow[aria-pressed="true"] span.out{color:var(--accent-ink);opacity:.75}
+.wkrow:disabled{cursor:not-allowed;opacity:.4;text-decoration:line-through}
+.wkpick-sel{font-size:13px;color:var(--muted)}
 .lightbox img{max-width:100%;max-height:85vh;border-radius:12px;display:block}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .notes{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ink);opacity:.86}
@@ -120,6 +136,14 @@ textarea{min-height:96px;resize:vertical}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:60;font-weight:500}
 .lockbar{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between}
 .lockbar p{margin:0;color:var(--muted);font-size:13px;max-width:60ch}
+.gate{position:fixed;inset:0;z-index:80;background:var(--bg);display:grid;place-items:center;overflow:auto;
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.gate-card{width:min(380px,100%);display:grid;gap:12px}
+.gate-eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.gate h2{margin:0 0 4px;font-family:var(--display);font-weight:800;font-size:52px;line-height:.92;letter-spacing:-.03em}
+.gate h2 span{color:var(--accent)}
+.gate p{margin:0;color:var(--muted)}
+.gate input{width:100%;background:var(--surface);color:var(--ink);border:1px solid var(--muted);border-radius:10px;font-size:16px;padding:12px 14px}
 </style>
 
 </head><body>
@@ -145,7 +169,7 @@ textarea{min-height:96px;resize:vertical}
 
   <section id="view-dishes">
     <div class="bar">
-      <p class="hint">Click a column heading to sort it. Click again to flip the order.</p>
+      <p class="hint">Click Week or Score to sort. Click again to flip the order.</p>
       <button class="btn primary" id="add-dish">+ Add a dish</button>
     </div>
     <div class="tablewrap" id="dishes-wrap" hidden>
@@ -153,9 +177,9 @@ textarea{min-height:96px;resize:vertical}
         <thead><tr>
           <th class="plain" scope="col">Photo</th>
           <th scope="col" data-col="week"><button type="button">Week <span class="arr"></span></button></th>
-          <th scope="col" data-col="name"><button type="button">Dish <span class="arr"></span></button></th>
+          <th class="plain" scope="col">Dish</th>
           <th scope="col" data-col="score"><button type="button">Score <span class="arr"></span></button></th>
-          <th scope="col" data-col="notes"><button type="button">Notes <span class="arr"></span></button></th>
+          <th class="plain" scope="col">Notes</th>
           <th class="plain" scope="col"><span class="sr">Actions</span></th>
         </tr></thead>
         <tbody id="dishes"></tbody>
@@ -184,8 +208,8 @@ textarea{min-height:96px;resize:vertical}
   </section>
 
   <footer class="lockbar">
-    <p id="lock-text"></p>
-    <button type="button" class="btn ghost" id="lock-btn">Enter passcode</button>
+    <p id="lock-text">Unlocked on this device. Lock it to ask for the passcode again next time.</p>
+    <button type="button" class="btn ghost" id="lock-btn">Lock</button>
   </footer>
 </div>
 
@@ -193,11 +217,13 @@ textarea{min-height:96px;resize:vertical}
   <form class="sheet" id="dish-form" novalidate>
     <h2 id="dish-form-title">Add a dish</h2>
     <label class="field"><span>Dish</span><input type="text" id="f-name" maxlength="120" placeholder="Coq au vin" required></label>
-    <div class="two">
-      <label class="field"><span>Week of</span><input type="date" id="f-week" required></label>
-      <div class="field"><span>Score</span>
-        <div class="scorepick"><input type="range" id="f-score" min="0" max="10" step="0.5" value="7" aria-label="Score out of 10"><output id="f-score-out">7</output></div>
-      </div>
+    <div class="field"><span>Week</span>
+      <input type="hidden" id="f-week">
+      <div class="wkpick" id="wkpick"></div>
+      <div class="wkpick-sel" id="wkpick-sel" aria-live="polite"></div>
+    </div>
+    <div class="field"><span>Score</span>
+      <div class="scorepick"><input type="range" id="f-score" min="0" max="10" step="0.5" value="7" aria-label="Score out of 10"><output id="f-score-out">7</output></div>
     </div>
     <div class="field" id="photo-field"><span>Photo</span>
       <label class="drop" id="drop"><span id="drop-label">Tap to add a photo</span><img id="f-preview" alt="" hidden><input type="file" id="f-photo" accept="image/*"></label>
@@ -225,16 +251,14 @@ textarea{min-height:96px;resize:vertical}
 
 <div class="modal lightbox" id="lightbox" hidden><img id="lb-img" alt=""></div>
 
-<div class="modal" id="pass-modal" hidden style="z-index:70">
-  <form class="sheet" id="pass-form" style="width:min(420px,100%)">
-    <h2>House passcode</h2>
-    <p id="pass-msg" style="margin:0;color:var(--muted)"></p>
-    <input type="password" id="pass-input" autocomplete="current-password" aria-label="Passcode" required>
-    <p class="err" id="pass-err" hidden></p>
-    <div class="foot">
-      <button type="button" class="btn ghost" id="pass-cancel">Cancel</button>
-      <button type="submit" class="btn primary" id="pass-ok">Unlock</button>
-    </div>
+<div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gate-title">
+  <form class="gate-card" id="gate-form">
+    <small class="gate-eyebrow">Weekly supper club</small>
+    <h2 id="gate-title">Maison <span>Emma</span></h2>
+    <p id="gate-msg">Enter the house passcode to open Maison Emma.</p>
+    <input type="password" id="gate-input" autocomplete="current-password" aria-label="House passcode" placeholder="House passcode" required>
+    <p class="err" id="gate-err" hidden></p>
+    <button type="submit" class="btn primary" id="gate-ok">Open</button>
   </form>
 </div>
 
@@ -244,15 +268,19 @@ textarea{min-height:96px;resize:vertical}
 (() => {
 const $ = id => document.getElementById(id);
 const state = { dishes: [], ideas: [], sort: 'week-desc', db: null, assets: null, editing: null, fromIdea: null, photoBlob: null, photoCleared: false };
-const FIRST_DIR = { week: 'desc', name: 'asc', score: 'desc', notes: 'asc' };
+const FIRST_DIR = { week: 'desc', score: 'desc' };
 try { const s = localStorage.getItem('me-sort') || ''; const [k, d] = s.split('-'); if (FIRST_DIR[k] && (d === 'asc' || d === 'desc')) state.sort = s; } catch(e) {}
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtScore = n => (Math.round(n * 10) / 10).toString();
 const today = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset()*6e4).toISOString().slice(0,10); };
 function isoWeek(str){ const d = new Date(str + 'T12:00:00'); const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day); const y0 = new Date(Date.UTC(t.getUTCFullYear(),0,1)); return Math.ceil(((t - y0) / 864e5 + 1) / 7); }
-function weekLabel(str){ if(!str) return 'Week unknown'; const d = new Date(str + 'T12:00:00'); return `Wk ${isoWeek(str)} · ${d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}`; }
-const photoUrl = id => "https://maison-emma-api.gift-ideas-api.workers.dev/photos/" + id;
+const isoDay = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const atNoon = s => new Date(s + 'T12:00:00');
+// Every dish belongs to a week, identified by that week's Monday (YYYY-MM-DD).
+const mondayOf = s => { const d = atNoon(s); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return isoDay(d); };
+function weekLabel(str){ if(!str) return 'Week unknown'; const d = atNoon(mondayOf(str)); return `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`; }
+const photoUrl = id => photoCache[id] || '';
 const scoreClass = s => s >= 8 ? 's-good' : s >= 5 ? 's-mid' : 's-low';
 function toast(msg){ const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => t.hidden = true, 2400); }
 function notice(msg){ const n = $('notice'); n.textContent = msg || ''; n.hidden = !msg; }
@@ -270,12 +298,8 @@ addEventListener('hashchange', route); route();
 function sorted(){
   const [key, dir] = state.sort.split('-'), m = dir === 'asc' ? 1 : -1;
   const byWeek = (x,y) => (x.weekOf||'').localeCompare(y.weekOf||'') || (x.createdAt||0) - (y.createdAt||0);
-  const text = f => (x,y) => (x[f]||'').localeCompare(y[f]||'', undefined, { sensitivity: 'base', numeric: true });
-  const cmp = { week: byWeek, score: (x,y) => x.score - y.score, name: text('name'), notes: text('notes') }[key];
-  return state.dishes.slice().sort((x,y) => {
-    if (key === 'notes' && !x.notes !== !y.notes) return x.notes ? -1 : 1; // dishes without notes always go last
-    return cmp(x,y) * m || -byWeek(x,y);
-  });
+  const cmp = key === 'score' ? (x,y) => x.score - y.score : byWeek;
+  return state.dishes.slice().sort((x,y) => cmp(x,y) * m || -byWeek(x,y));
 }
 function renderDishes(){
   const [key, dir] = state.sort.split('-');
@@ -290,7 +314,7 @@ function renderDishes(){
   $('dishes').innerHTML = list.map(d => `
     <tr>
       <td>${d.photo ? `<button class="thumb-btn" data-photo="${esc(d.photo)}" aria-label="View photo of ${esc(d.name)}"><img class="thumb" src="${esc(photoUrl(d.photo))}" alt="" loading="lazy" onerror="this.parentNode.replaceWith(Object.assign(document.createElement('div'),{className:'nothumb'}))"></button>` : '<div class="nothumb" title="No photo"></div>'}</td>
-      <td class="wk">${esc(weekLabel(d.weekOf))}</td>
+      <td class="wk">${esc(weekLabel(d.weekOf))}<span class="wkno">Wk ${isoWeek(mondayOf(d.weekOf))}</span></td>
       <td class="nm">${esc(d.name)}</td>
       <td class="sc"><span class="pill ${scoreClass(d.score)}">${fmtScore(d.score)}<i>/10</i></span></td>
       <td class="nt">${esc(d.notes)}</td>
@@ -355,11 +379,38 @@ $('f-photo-clear').addEventListener('click', () => { state.photoBlob = null; sta
 
 /* ---------- dish form ---------- */
 $('f-score').addEventListener('input', e => $('f-score-out').textContent = fmtScore(+e.target.value));
+
+/* ---------- week picker: a month calendar where each row is one week ---------- */
+function takenWeeks(){ const m = {}; state.dishes.forEach(d => { if (d.id !== state.editing?.id) m[mondayOf(d.weekOf)] = d.name; }); return m; }
+function renderPicker(){
+  const taken = takenWeeks(), p = state.pick, y = p.month.getFullYear(), mo = p.month.getMonth();
+  const first = new Date(y, mo, 1, 12), last = new Date(y, mo + 1, 0, 12);
+  let rows = '';
+  for (const mon = atNoon(mondayOf(isoDay(first))); mon <= last; mon.setDate(mon.getDate() + 7)) {
+    const key = isoDay(mon), t = taken[key];
+    let cells = '';
+    for (let i = 0; i < 7; i++) { const d = new Date(mon); d.setDate(mon.getDate() + i); cells += `<span class="${d.getMonth() !== mo ? 'out' : ''}">${d.getDate()}</span>`; }
+    rows += `<button type="button" class="wkrow" data-week="${key}" aria-pressed="${key === p.sel}" ${t ? 'disabled' : ''} title="${esc(t ? 'Already has: ' + t : 'Week of ' + weekLabel(key))}" aria-label="${esc('Week of ' + weekLabel(key) + (t ? ', already has ' + t : ''))}">${cells}</button>`;
+  }
+  $('wkpick').innerHTML = `<div class="wkpick-head"><button type="button" class="wkpick-nav" data-nav="-1" aria-label="Previous month">‹</button><b>${first.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</b><button type="button" class="wkpick-nav" data-nav="1" aria-label="Next month">›</button></div><div class="wkpick-dows">${['M','T','W','T','F','S','S'].map(x => `<span>${x}</span>`).join('')}</div>${rows}`;
+  $('f-week').value = p.sel || '';
+  $('wkpick-sel').textContent = p.sel ? `Week of Monday ${weekLabel(p.sel)} (Wk ${isoWeek(p.sel)})` : 'Pick the week Emma cooked it. Crossed-out weeks already have a dish.';
+}
+$('wkpick').addEventListener('click', e => {
+  const n = e.target.closest('[data-nav]');
+  if (n) { const m = state.pick.month; state.pick.month = new Date(m.getFullYear(), m.getMonth() + Number(n.dataset.nav), 1, 12); return renderPicker(); }
+  const r = e.target.closest('[data-week]');
+  if (r && !r.disabled) { state.pick.sel = r.dataset.week; renderPicker(); }
+});
 function openDish(d, fromIdea){
   state.editing = d || null; state.fromIdea = fromIdea || null; state.photoBlob = null; state.photoCleared = false;
   $('dish-form-title').textContent = d ? 'Edit dish' : 'Add a dish';
   $('f-name').value = d?.name || fromIdea?.name || '';
-  $('f-week').value = d?.weekOf || today();
+  const thisWeek = mondayOf(today());
+  const sel = d?.weekOf ? mondayOf(d.weekOf) : (takenWeeks()[thisWeek] ? '' : thisWeek);
+  const shown = atNoon(sel || thisWeek);
+  state.pick = { sel, month: new Date(shown.getFullYear(), shown.getMonth(), 1, 12) };
+  renderPicker();
   $('f-score').value = d?.score ?? 7; $('f-score-out').textContent = fmtScore(+$('f-score').value);
   $('f-notes').value = d?.notes || fromIdea?.notes || '';
   $('f-photo').value = ''; setPreview(d?.photo ? photoUrl(d.photo) : null);
@@ -381,6 +432,7 @@ $('dish-form').addEventListener('submit', async e => {
   const err = m => { $('f-err').textContent = m; $('f-err').hidden = false; };
   if (!name) return err('Give the dish a name.');
   if (!weekOf) return err('Pick the week it was cooked.');
+  if (takenWeeks()[weekOf]) return err(`The week of ${weekLabel(weekOf)} already has ${takenWeeks()[weekOf]}. Pick another week.`);
   $('f-save').disabled = true; $('f-save').textContent = 'Saving…';
   try {
     const prev = state.editing;
@@ -400,6 +452,7 @@ $('dish-form').addEventListener('submit', async e => {
     const c = x?.code;
     err(c === 'too_large' ? 'That photo is too big. Try a smaller one.'
       : c === 'needs_passcode' ? 'Saving needs the house passcode.'
+      : c === 'http_409' ? 'That week already has a dish. Pick another week.'
       : c === 'not_granted' || c === 'permission_denied' ? "You don't have permission to save here. Ask the owner for edit access."
       : "Couldn't save. Check your connection and try again.");
   }
@@ -449,7 +502,7 @@ $('idea-form').addEventListener('submit', async e => {
   } catch(_) { toast("Couldn't save the idea. Try again."); }
 });
 
-/* ---------- shared storage (Cloudflare Worker) ---------- */
+/* ---------- shared storage (Cloudflare Worker), behind the house passcode ---------- */
 const API = "https://maison-emma-api.gift-ideas-api.workers.dev";
 async function call(method, path, body, pass) {
   const headers = {};
@@ -463,53 +516,59 @@ async function call(method, path, body, pass) {
   return out;
 }
 
-/* passcode: checked by the worker on every write; remembered on this device */
+/* passcode gate: shown when the site opens; the worker checks the passcode on every request */
 const PASS_KEY = 'me-passcode';
 let memPass = '';
 const getPass = () => { try { return localStorage.getItem(PASS_KEY) || memPass; } catch (e) { return memPass; } };
-function setPass(v) { memPass = v; try { v ? localStorage.setItem(PASS_KEY, v) : localStorage.removeItem(PASS_KEY); } catch (e) {} renderLock(); }
-function askPasscode(message) {
-  return new Promise(res => {
-    $('pass-msg').textContent = message || 'Enter the house passcode to add or change entries. This device will remember it.';
-    $('pass-input').value = ''; $('pass-err').hidden = true; $('pass-modal').hidden = false;
-    setTimeout(() => $('pass-input').focus(), 30);
-    const done = v => { $('pass-modal').hidden = true; $('pass-form').onsubmit = null; $('pass-cancel').onclick = null; res(v); };
-    $('pass-cancel').onclick = () => done(null);
-    $('pass-form').onsubmit = async e => {
-      e.preventDefault(); const v = $('pass-input').value; if (!v) return;
-      $('pass-ok').disabled = true;
-      try { await call('POST', '/api/check', undefined, v); setPass(v); done(v); }
-      catch (x) { $('pass-err').textContent = x.code === 'wrong_passcode' ? "That's not the passcode." : "Couldn't check the passcode. Check your connection and try again."; $('pass-err').hidden = false; }
-      finally { $('pass-ok').disabled = false; }
+function setPass(v) { memPass = v; try { v ? localStorage.setItem(PASS_KEY, v) : localStorage.removeItem(PASS_KEY); } catch (e) {} }
+let gateWait = null;
+function showGate(message) {
+  if (gateWait) return gateWait;
+  gateWait = new Promise(res => {
+    $('gate-msg').textContent = message || 'Enter the house passcode to open Maison Emma.';
+    $('gate-err').hidden = true; $('gate-input').value = ''; $('gate').hidden = false;
+    setTimeout(() => $('gate-input').focus(), 30);
+    $('gate-form').onsubmit = async e => {
+      e.preventDefault(); const v = $('gate-input').value; if (!v) return;
+      $('gate-ok').disabled = true;
+      try { await call('POST', '/api/check', undefined, v); setPass(v); $('gate').hidden = true; gateWait = null; res(v); }
+      catch (x) { $('gate-err').textContent = x.code === 'wrong_passcode' ? "That's not the passcode." : "Couldn't reach Maison Emma. Check your connection and try again."; $('gate-err').hidden = false; }
+      finally { $('gate-ok').disabled = false; }
     };
   });
+  return gateWait;
 }
+const ensurePass = async () => getPass() || showGate();
 async function withPass(fn) {
-  let p = getPass() || await askPasscode();
-  if (!p) throw { code: 'needs_passcode' };
+  let p = await ensurePass();
   try { return await fn(p); }
   catch (x) {
     if (x.code !== 'wrong_passcode') throw x;
     setPass('');
-    p = await askPasscode('The passcode has changed. Enter the new one to continue.');
-    if (!p) throw { code: 'needs_passcode' };
+    p = await showGate('The passcode has changed. Enter the new one.');
     return await fn(p);
   }
 }
-function renderLock() {
-  const on = !!getPass();
-  $('lock-text').textContent = on ? 'Editing is unlocked on this device.' : 'Anyone can view this page. Adding or changing entries needs the house passcode.';
-  $('lock-btn').textContent = on ? 'Lock editing' : 'Enter passcode';
-}
-$('lock-btn').addEventListener('click', () => { if (getPass()) { setPass(''); toast('Editing locked on this device'); } else askPasscode(); });
-renderLock();
+if (getPass()) $('gate').hidden = true; else showGate();
+$('lock-btn').addEventListener('click', () => { setPass(''); location.reload(); });
 
 /* data */
+const photoCache = {};
 const listeners = {};
 async function refresh(c) {
   if (c === 'ideas' && document.querySelector('[data-isave]')) return; // don't wipe an idea being edited
-  const rows = await call('GET', '/api/' + c);
-  (listeners[c] || []).forEach(f => f({ docs: rows.map(r => ({ id: r.id, data: () => r })) }));
+  const rows = await withPass(p => call('GET', '/api/' + c, undefined, p));
+  const emit = () => (listeners[c] || []).forEach(f => f({ docs: rows.map(r => ({ id: r.id, data: () => r })) }));
+  emit();
+  if (c === 'dishes') {
+    const need = rows.map(r => r.photo).filter(id => id && !photoCache[id]);
+    if (!need.length) return;
+    const p = getPass();
+    await Promise.all(need.map(async id => {
+      try { const r = await fetch(API + '/api/photos/' + id, { headers: { 'X-Passcode': p } }); if (r.ok) photoCache[id] = URL.createObjectURL(await r.blob()); } catch (e) {}
+    }));
+    emit();
+  }
 }
 const sharedDb = { collection: c => ({
   add: async d => { await withPass(p => call('POST', '/api/' + c, d, p)); await refresh(c); },
@@ -524,11 +583,11 @@ const sharedDb = { collection: c => ({
   onSnapshot: (f, e) => { (listeners[c] = listeners[c] || []).push(f); refresh(c).catch(e); }
 }) };
 const sharedAssets = {
-  upload: blob => withPass(p => call('POST', '/api/photos', blob, p)),
+  upload: async blob => { const r = await withPass(p => call('POST', '/api/photos', blob, p)); photoCache[r.id] = URL.createObjectURL(blob); return r; },
   delete: id => withPass(p => call('DELETE', '/api/photos/' + id, undefined, p)).catch(() => {})
 };
 /* pick up other people's changes */
-const pull = () => { if (!document.hidden) { refresh('dishes').catch(() => {}); refresh('ideas').catch(() => {}); } };
+const pull = () => { if (!document.hidden && getPass()) { refresh('dishes').catch(() => {}); refresh('ideas').catch(() => {}); } };
 setInterval(pull, 60000);
 document.addEventListener('visibilitychange', pull);
 
